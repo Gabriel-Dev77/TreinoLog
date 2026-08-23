@@ -4,7 +4,7 @@ Aplicativo mobile de jogos educativos voltado para crianças com dificuldades de
 
 ##  Sobre o projeto
 
-Este repositório contém o desenvolvimento progressivo da aplicação **Aprenda Brincando**, elaborada como trabalho da disciplina de Desenvolvimento Mobile.
+Este repositório contém o desenvolvimento progressivo da aplicação Aprenda Brincando, elaborada como trabalho da disciplina de Tecnologia de Construção de Software 2.
 
 A proposta completa do projeto (problema, público-alvo, funcionalidades, telas, fluxo de navegação e tecnologias) está disponível em [`docs/proposta.md`](docs/proposta.md).
 
@@ -38,5 +38,5 @@ aprenda_brincando/
 ## Autor
 
 - Gabriel Pereira Oliveira
-- Disciplina: Tecnologia da Construção 2
+- Disciplina: Tecnologia de Construção de Software 2
 - etapa-01
