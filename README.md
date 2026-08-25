@@ -36,5 +36,5 @@ TreinoLog/
 ## Autor
 
 - Gabriel Pereira Oliveira
-- Disciplina: Tecnologia da Construção 2
+- Disciplina: Tecnologia de Construção de Software 2
 - etapa-01
