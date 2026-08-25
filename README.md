@@ -1,36 +1,34 @@
-# Aprenda Brincando 
+ ## TreinoLog 
 
-Aplicativo mobile de jogos educativos voltado para crianças com dificuldades de aprendizagem (como dislexia, TDAH e discalculia), com o objetivo de estimular leitura, escrita, memória e raciocínio lógico-matemático de forma lúdica e adaptada.
+Aplicativo mobile para registro e acompanhamento de treinos de musculação, com controle de hidratação diária, desenvolvido de forma progressiva ao longo da disciplina.
 
-##  Sobre o projeto
+## Sobre o projeto
 
-Este repositório contém o desenvolvimento progressivo da aplicação **Aprenda Brincando**, elaborada como trabalho da disciplina de Desenvolvimento Mobile.
+Este repositório contém o desenvolvimento progressivo da aplicação TreinoLog, elaborada como trabalho da disciplina de Desenvolvimento Mobile.
 
 A proposta completa do projeto (problema, público-alvo, funcionalidades, telas, fluxo de navegação e tecnologias) está disponível em [`docs/proposta.md`](docs/proposta.md).
 
-##  Tecnologias utilizadas
+## Tecnologias utilizadas
 
-- **Frontend Mobile:** Flutter (Dart)
-- **Backend:** Firebase (Firestore + Authentication)
-- **APIs externas:** Text-to-Speech (narração das instruções dos jogos)
+- Frontend Mobile:Flutter (Dart)
+- Armazenamento: SQLite (`sqflite`) para treinos e histórico, `shared_preferences` para configurações e hidratação
 
-##  Estrutura do projeto
 
 ```
-aprenda_brincando/
+TreinoLog/
 ├── android/
 ├── ios/
 ├── lib/
-│   ├── main.dart
-│   ├── screens/
-│   ├── widgets/
-│   ├── models/
-│   ├── services/
-│   └── utils/
+│ ├── main.dart
+│ ├── screens/
+│ ├── widgets/
+│ ├── models/
+│ ├── services/
+│ └── utils/
 ├── assets/
 ├── test/
 ├── docs/
-│   └── proposta.md
+│ └── proposta.md
 ├── pubspec.yaml
 └── README.md
 ```
