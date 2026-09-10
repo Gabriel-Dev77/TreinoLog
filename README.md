@@ -38,3 +38,8 @@ TreinoLog/
 - Gabriel Pereira Oliveira
 - Disciplina: Tecnologia de Construção de Software 2
 - etapa-01
+
+## Status do desenvolvimento
+
+- Etapa 1: Proposta e planejamento
+- Etapa 2: Protótipo de interface (ver [`docs/etapa-02.md`](docs/etapa-02.md))
