@@ -9,4 +9,8 @@ class WorkoutStore {
   static void addWorkout(Workout workout) {
     workouts.add(workout);
   }
+
+  static void removeWorkout(Workout workout) {
+    workouts.remove(workout);
+  }
 }

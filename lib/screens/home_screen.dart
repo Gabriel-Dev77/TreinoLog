@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'profile_screen.dart';
 import '../widgets/responsive_container.dart';
+import '../services/feedback_service.dart';
 
-// Agora é Stateful, porque o contador de água MUDA
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -11,9 +10,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Variáveis que guardam o estado da tela
   int _coposDeAgua = 0;
-  final int _metaDeAgua = 8; // meta diária, por exemplo 8 copos
+  final int _metaDeAgua = 8;
 
   void _adicionarCopo() {
     setState(() {
@@ -21,6 +19,12 @@ class _HomeScreenState extends State<HomeScreen> {
         _coposDeAgua++;
       }
     });
+
+    if (_coposDeAgua >= _metaDeAgua) {
+      FeedbackService.success(context, 'Meta de hidratação atingida! 💧');
+    } else {
+      FeedbackService.info(context, 'Copo registrado ($_coposDeAgua/$_metaDeAgua)');
+    }
   }
 
   @override
@@ -28,77 +32,77 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('TreinoLog'),
-        actions: [
-          // Botão de perfil no canto superior direito
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              // Navigator.push abre uma nova tela "por cima" da atual
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
-        // SingleChildScrollView permite rolar a tela se o conteúdo não couber
         padding: const EdgeInsets.all(16.0),
         child: ResponsiveContainer(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Resumo de hoje',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16), // espaçamento vertical
+              Text('Resumo de hoje', style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 16),
 
-              // Card de treino do dia
               Card(
-                elevation: 2,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.fitness_center, size: 32, color: Colors.blue),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Nenhum treino registrado hoje',
-                          style: TextStyle(fontSize: 16),
+                  child: MergeSemantics(
+                    child: Row(
+                      children: [
+                        const ExcludeSemantics(
+                          child: Icon(Icons.fitness_center, size: 32, color: Colors.blue),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Nenhum treino registrado hoje',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Card de hidratação
               Card(
-                elevation: 2,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.water_drop, size: 32, color: Colors.lightBlue),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Hidratação: $_coposDeAgua / $_metaDeAgua copos',
-                            style: const TextStyle(fontSize: 16),
+                      // liveRegion: true faz o leitor de tela anunciar
+                      // automaticamente quando o valor muda, sem precisar
+                      // que o usuário navegue até o texto de novo.
+                      Semantics(
+                        liveRegion: true,
+                        label: 'Hidratação: $_coposDeAgua de $_metaDeAgua copos',
+                        child: ExcludeSemantics(
+                          child: Row(
+                            children: [
+                              const Icon(Icons.water_drop, size: 32, color: Colors.lightBlue),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Hidratação: $_coposDeAgua / $_metaDeAgua copos',
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                       const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: _adicionarCopo,
-                        icon: const Icon(Icons.add),
-                        label: const Text('Registrar copo de água'),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Semantics(
+                          label: 'Registrar copo de água',
+                          hint: 'Adiciona um copo ao contador de hidratação do dia',
+                          button: true,
+                          child: ElevatedButton.icon(
+                            onPressed: _coposDeAgua >= _metaDeAgua ? null : _adicionarCopo,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Registrar copo de água'),
+                          ),
+                        ),
                       ),
                     ],
                   ),
