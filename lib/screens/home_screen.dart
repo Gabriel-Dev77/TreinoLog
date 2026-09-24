@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/workout.dart';
+import '../services/workout_store.dart';
 import '../widgets/responsive_container.dart';
 import '../services/feedback_service.dart';
 
@@ -12,6 +14,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _coposDeAgua = 0;
   final int _metaDeAgua = 8;
+
+  List<Workout> _treinosDeHoje() {
+    final agora = DateTime.now();
+    return WorkoutStore.workouts
+        .where((t) =>
+            t.data.year == agora.year &&
+            t.data.month == agora.month &&
+            t.data.day == agora.day)
+        .toList();
+  }
 
   void _adicionarCopo() {
     setState(() {
@@ -42,26 +54,42 @@ class _HomeScreenState extends State<HomeScreen> {
               Text('Resumo de hoje', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 16),
 
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: MergeSemantics(
-                    child: Row(
-                      children: [
-                        const ExcludeSemantics(
-                          child: Icon(Icons.fitness_center, size: 32, color: Colors.blue),
+              ValueListenableBuilder<int>(
+                valueListenable: WorkoutStore.changes,
+                builder: (context, _, _) {
+                  final treinosHoje = _treinosDeHoje();
+                  final exercicios = treinosHoje.fold<int>(
+                    0,
+                    (soma, treino) => soma + treino.exercicios.length,
+                  );
+                  final texto = treinosHoje.isEmpty
+                      ? 'Nenhum treino registrado hoje'
+                      : '${treinosHoje.length} '
+                          '${treinosHoje.length == 1 ? 'treino registrado' : 'treinos registrados'} hoje '
+                          '($exercicios ${exercicios == 1 ? 'exercício' : 'exercícios'})';
+
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: MergeSemantics(
+                        child: Row(
+                          children: [
+                            const ExcludeSemantics(
+                              child: Icon(Icons.fitness_center, size: 32, color: Colors.blue),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                texto,
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Nenhum treino registrado hoje',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
 
