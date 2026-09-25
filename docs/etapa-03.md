@@ -52,4 +52,4 @@ Para testar a navegação:
 3. No Histórico, tente excluir um treino e observe a confirmação exigida antes da exclusão.
 4. Aumente a hidratação até a meta diária e observe o botão ficar desabilitado.
 
-Para testar a acessibilidade, é possível ativar o leitor de tela do sistema operacional (TalkBack no Android ou VoiceOver no iOS/macOS) e navegar pelo app usando apenas gestos de leitura, sem olhar para a tela.
+Para testar a acessibilidade, é possível ativar o leitor de tela do sistema operacional (TalkBack no Android ou VoiceOver no iOS/macOS) e navegar pelo app usando apenas gestos de leitura, sem olhar para a tela.'
