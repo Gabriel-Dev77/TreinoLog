@@ -4,6 +4,7 @@ import '../models/workout.dart';
 import '../services/workout_store.dart';
 import '../widgets/exercise_tile.dart';
 import '../widgets/responsive_container.dart';
+import 'package:flutter/services.dart';
 
 class NewWorkoutScreen extends StatefulWidget {
   const NewWorkoutScreen({super.key});
@@ -116,6 +117,7 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
                     TextField(
                       controller: _seriesController,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: const InputDecoration(
                         labelText: 'Séries',
                         border: OutlineInputBorder(),
@@ -124,6 +126,7 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
                     TextField(
                       controller: _repeticoesController,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: const InputDecoration(
                         labelText: 'Repetições',
                         border: OutlineInputBorder(),
@@ -132,6 +135,9 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
                     TextField(
                       controller: _cargaController,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                      ],
                       decoration: const InputDecoration(
                         labelText: 'Carga (kg)',
                         border: OutlineInputBorder(),
