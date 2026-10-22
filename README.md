@@ -44,3 +44,4 @@ TreinoLog/
 - Etapa 1: Proposta e planejamento
 - Etapa 2: Protótipo de interface (ver [`docs/etapa-02.md`](docs/etapa-02.md))
 - Etapa 3: Naveação, UX e acessibilidade
+- Etapa 4: Persistência local de dados (ver [`docs/etapa-04.md`](docs/etapa-04.md))

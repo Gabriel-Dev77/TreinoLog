@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/workout_store.dart';
 import '../widgets/exercise_tile.dart';
 import '../widgets/responsive_container.dart';
-import 'package:flutter/services.dart';
 
 class NewWorkoutScreen extends StatefulWidget {
   const NewWorkoutScreen({super.key});
@@ -14,14 +14,13 @@ class NewWorkoutScreen extends StatefulWidget {
 }
 
 class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
-  // Um controller para cada campo de texto
   final _nomeController = TextEditingController();
   final _seriesController = TextEditingController();
   final _repeticoesController = TextEditingController();
   final _cargaController = TextEditingController();
 
-  // Lista temporária dos exercícios que estão sendo montados neste treino
   final List<Exercise> _exercicios = [];
+  bool _salvando = false;
 
   void _adicionarExercicio() {
     if (_nomeController.text.trim().isEmpty) {
@@ -32,6 +31,7 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
     }
 
     final exercicio = Exercise(
+      id: WorkoutStore.generateId(),
       nome: _nomeController.text.trim(),
       series: int.tryParse(_seriesController.text) ?? 0,
       repeticoes: int.tryParse(_repeticoesController.text) ?? 0,
@@ -47,7 +47,8 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
     });
   }
 
-  void _salvarTreino() {
+  // Agora é assíncrona: grava no disco antes de limpar a tela.
+  Future<void> _salvarTreino() async {
     if (_exercicios.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Adicione pelo menos um exercício')),
@@ -55,15 +56,21 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
       return;
     }
 
+    setState(() => _salvando = true);
+
     final treino = Workout(
+      id: WorkoutStore.generateId(),
       data: DateTime.now(),
       exercicios: List.from(_exercicios),
     );
 
-    WorkoutStore.addWorkout(treino);
+    await WorkoutStore.addWorkout(treino);
+
+    if (!mounted) return;
 
     setState(() {
       _exercicios.clear();
+      _salvando = false;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -73,8 +80,6 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
 
   @override
   void dispose() {
-    // Sempre "limpar" os controllers quando a tela for destruída,
-    // para evitar vazamento de memória
     _nomeController.dispose();
     _seriesController.dispose();
     _repeticoesController.dispose();
@@ -107,8 +112,6 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
               ),
               const SizedBox(height: 12),
 
-              // LayoutBuilder decide o layout dos campos conforme o espaço disponível:
-              // telas estreitas -> campos empilhados; telas largas -> lado a lado.
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isNarrow = constraints.maxWidth < 400;
@@ -195,8 +198,6 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
                   child: Text('Nenhum exercício adicionado ainda.'),
                 ),
 
-              // shrinkWrap + NeverScrollableScrollPhysics permitem usar uma
-              // ListView DENTRO de uma área que já rola (SingleChildScrollView)
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -211,9 +212,15 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _salvarTreino,
-                  icon: const Icon(Icons.save),
-                  label: const Text('Salvar treino'),
+                  onPressed: _salvando ? null : _salvarTreino,
+                  icon: _salvando
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.save),
+                  label: Text(_salvando ? 'Salvando...' : 'Salvar treino'),
                 ),
               ),
             ],

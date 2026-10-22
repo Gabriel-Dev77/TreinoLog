@@ -4,9 +4,18 @@ import 'screens/new_workout_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/progress_screen.dart';
 import 'screens/profile_screen.dart';
+import 'services/workout_store.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
+  // Necessário antes de usar qualquer plugin nativo (como SharedPreferences)
+  // fora do runApp.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Carrega os dados salvos ANTES do app abrir, para que a primeira tela
+  // já mostre o histórico persistido, sem telas em branco piscando.
+  await WorkoutStore.init();
+
   runApp(const TreinoLogApp());
 }
 

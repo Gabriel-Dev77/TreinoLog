@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/workout.dart';
 import '../services/workout_store.dart';
-import '../services/feedback_service.dart';
 import '../widgets/exercise_tile.dart';
 import '../widgets/responsive_container.dart';
+import 'workout_details_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -17,17 +18,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    // Simula um breve carregamento para demonstrar o Skeleton Screen:
-    // a estrutura da tela aparece antes dos dados, reduzindo a
-    // percepção de demora (conforme a aula de UX).
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 400), () {
       if (mounted) setState(() => _carregando = false);
     });
   }
 
-  Future<void> _confirmarExclusao(workout) async {
-    // Ação destrutiva: exige confirmação explícita, aumentando o
-    // "atrito" de propósito (Lei de Fitts para ações destrutivas).
+  Future<void> _confirmarExclusao(Workout workout) async {
     final confirmou = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -38,24 +34,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancelar'),
           ),
-          Semantics(
-            label: 'Confirmar exclusão do treino',
-            button: true,
-            child: FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Excluir'),
-            ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Excluir'),
           ),
         ],
       ),
     );
 
     if (confirmou == true) {
-      setState(() {
-        WorkoutStore.removeWorkout(workout);
-      });
-      if (mounted) FeedbackService.success(context, 'Treino excluído');
+      await WorkoutStore.removeWorkout(workout);
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Treino excluído')),
+        );
+      }
     }
   }
 
@@ -110,34 +105,45 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       final workout = workouts[index];
                       return Card(
                         margin: const EdgeInsets.only(bottom: 16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _formatarData(workout.data),
-                                    style: Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  Semantics(
-                                    label: 'Excluir treino de ${_formatarData(workout.data)}',
-                                    button: true,
-                                    child: IconButton(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => WorkoutDetailsScreen(workout: workout),
+                              ),
+                            );
+                            // Ao voltar da tela de detalhes, a edição pode ter
+                            // mudado os dados — redesenha a lista.
+                            if (mounted) setState(() {});
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _formatarData(workout.data),
+                                      style: Theme.of(context).textTheme.titleMedium,
+                                    ),
+                                    IconButton(
                                       icon: const Icon(Icons.delete_outline),
                                       onPressed: () => _confirmarExclusao(workout),
                                       constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                                      tooltip: 'Excluir treino',
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              ...workout.exercicios.map(
-                                (exercicio) => ExerciseTile(exercise: exercicio),
-                              ),
-                            ],
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                ...workout.exercicios.map(
+                                  (exercicio) => ExerciseTile(exercise: exercicio),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
