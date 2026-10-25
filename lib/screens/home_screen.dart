@@ -3,6 +3,7 @@ import '../models/workout.dart';
 import '../services/workout_store.dart';
 import '../widgets/responsive_container.dart';
 import '../services/feedback_service.dart';
+import '../widgets/offline_banner.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -45,99 +46,108 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('TreinoLog'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: ResponsiveContainer(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Resumo de hoje', style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 16),
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(child: _buildResumo(context)),
+        ],
+      ),
+    );
+  }
 
-              ValueListenableBuilder<int>(
-                valueListenable: WorkoutStore.changes,
-                builder: (context, _, _) {
-                  final treinosHoje = _treinosDeHoje();
-                  final exercicios = treinosHoje.fold<int>(
-                    0,
-                    (soma, treino) => soma + treino.exercicios.length,
-                  );
-                  final texto = treinosHoje.isEmpty
-                      ? 'Nenhum treino registrado hoje'
-                      : '${treinosHoje.length} '
-                          '${treinosHoje.length == 1 ? 'treino registrado' : 'treinos registrados'} hoje '
-                          '($exercicios ${exercicios == 1 ? 'exercício' : 'exercícios'})';
+  Widget _buildResumo(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: ResponsiveContainer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Resumo de hoje', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 16),
 
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: MergeSemantics(
+            ValueListenableBuilder<int>(
+              valueListenable: WorkoutStore.changes,
+              builder: (context, _, _) {
+                final treinosHoje = _treinosDeHoje();
+                final exercicios = treinosHoje.fold<int>(
+                  0,
+                  (soma, treino) => soma + treino.exercicios.length,
+                );
+                final texto = treinosHoje.isEmpty
+                    ? 'Nenhum treino registrado hoje'
+                    : '${treinosHoje.length} '
+                        '${treinosHoje.length == 1 ? 'treino registrado' : 'treinos registrados'} hoje '
+                        '($exercicios ${exercicios == 1 ? 'exercício' : 'exercícios'})';
+
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: MergeSemantics(
+                      child: Row(
+                        children: [
+                          const ExcludeSemantics(
+                            child: Icon(Icons.fitness_center, size: 32, color: Colors.blue),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              texto,
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // liveRegion: true faz o leitor de tela anunciar
+                    // automaticamente quando o valor muda, sem precisar
+                    // que o usuário navegue até o texto de novo.
+                    Semantics(
+                      liveRegion: true,
+                      label: 'Hidratação: $_coposDeAgua de $_metaDeAgua copos',
+                      child: ExcludeSemantics(
                         child: Row(
                           children: [
-                            const ExcludeSemantics(
-                              child: Icon(Icons.fitness_center, size: 32, color: Colors.blue),
-                            ),
+                            const Icon(Icons.water_drop, size: 32, color: Colors.lightBlue),
                             const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                texto,
-                                style: Theme.of(context).textTheme.bodyLarge,
-                              ),
+                            Text(
+                              'Hidratação: $_coposDeAgua / $_metaDeAgua copos',
+                              style: Theme.of(context).textTheme.bodyLarge,
                             ),
                           ],
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // liveRegion: true faz o leitor de tela anunciar
-                      // automaticamente quando o valor muda, sem precisar
-                      // que o usuário navegue até o texto de novo.
-                      Semantics(
-                        liveRegion: true,
-                        label: 'Hidratação: $_coposDeAgua de $_metaDeAgua copos',
-                        child: ExcludeSemantics(
-                          child: Row(
-                            children: [
-                              const Icon(Icons.water_drop, size: 32, color: Colors.lightBlue),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Hidratação: $_coposDeAgua / $_metaDeAgua copos',
-                                style: Theme.of(context).textTheme.bodyLarge,
-                              ),
-                            ],
-                          ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Semantics(
+                        label: 'Registrar copo de água',
+                        hint: 'Adiciona um copo ao contador de hidratação do dia',
+                        button: true,
+                        child: ElevatedButton.icon(
+                          onPressed: _coposDeAgua >= _metaDeAgua ? null : _adicionarCopo,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Registrar copo de água'),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: Semantics(
-                          label: 'Registrar copo de água',
-                          hint: 'Adiciona um copo ao contador de hidratação do dia',
-                          button: true,
-                          child: ElevatedButton.icon(
-                            onPressed: _coposDeAgua >= _metaDeAgua ? null : _adicionarCopo,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Registrar copo de água'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

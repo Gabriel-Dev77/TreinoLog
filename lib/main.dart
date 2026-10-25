@@ -12,8 +12,9 @@ void main() async {
   // fora do runApp.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Carrega os dados salvos ANTES do app abrir, para que a primeira tela
-  // já mostre o histórico persistido, sem telas em branco piscando.
+  // Carrega o cache local ANTES do app abrir (a primeira tela já mostra
+  // os treinos conhecidos) e dispara, em segundo plano, a sincronização
+  // com o backend. Se o servidor estiver fora do ar, o app abre mesmo assim.
   await WorkoutStore.init();
 
   runApp(const TreinoLogApp());

@@ -33,7 +33,8 @@ class Workout {
   factory Workout.fromJson(Map<String, dynamic> json) {
     return Workout(
       id: json['id'] as String,
-      data: DateTime.parse(json['data'] as String),
+      // toLocal(): se o servidor devolver a data em UTC, exibe no fuso do aparelho.
+      data: DateTime.parse(json['data'] as String).toLocal(),
       exercicios: (json['exercicios'] as List)
           .map((e) => Exercise.fromJson(e as Map<String, dynamic>))
           .toList(),

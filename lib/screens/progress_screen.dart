@@ -7,6 +7,15 @@ class ProgressScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Redesenha o gráfico sempre que os treinos mudarem (inclusive
+    // quando chegam dados novos do servidor).
+    return ValueListenableBuilder<int>(
+      valueListenable: WorkoutStore.changes,
+      builder: (context, _, _) => _buildConteudo(context),
+    );
+  }
+
+  Widget _buildConteudo(BuildContext context) {
     final workouts = WorkoutStore.workouts;
 
     // Agrupa as cargas registradas por nome de exercício, em ordem cronológica
