@@ -78,6 +78,7 @@ class ApiService {
         'series': e.series,
         'repeticoes': e.repeticoes,
         'carga': e.carga,
+        'wgerId': e.wgerId, // Etapa 6: vínculo com o catálogo wger
       };
 
   static dynamic _decodificar(http.Response res) {

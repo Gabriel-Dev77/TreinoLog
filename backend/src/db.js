@@ -17,7 +17,8 @@ const SCHEMA = `
     nome       TEXT NOT NULL,
     series     INTEGER NOT NULL,
     repeticoes INTEGER NOT NULL,
-    carga      REAL NOT NULL
+    carga      REAL NOT NULL,
+    wger_id    INTEGER
   );
 
   CREATE INDEX IF NOT EXISTS idx_exercises_workout ON exercises(workout_id);
@@ -35,5 +36,17 @@ export function openDatabase(file) {
   const db = new DatabaseSync(file);
   db.exec('PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA);
+  migrar(db);
   return db;
+}
+
+/**
+ * Atualiza bancos criados em versões anteriores.
+ * Etapa 6: coluna wger_id (id do exercício no catálogo externo wger).
+ */
+function migrar(db) {
+  const colunas = db.prepare('PRAGMA table_info(exercises)').all().map((c) => c.name);
+  if (!colunas.includes('wger_id')) {
+    db.exec('ALTER TABLE exercises ADD COLUMN wger_id INTEGER');
+  }
 }

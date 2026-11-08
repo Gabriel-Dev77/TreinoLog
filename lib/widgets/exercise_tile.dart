@@ -26,9 +26,27 @@ class ExerciseTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      exercise.nome,
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            exercise.nome,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        // Etapa 6: indica exercício vinculado ao catálogo wger.
+                        if (exercise.wgerId != null) ...[
+                          const SizedBox(width: 6),
+                          Semantics(
+                            label: 'do catálogo',
+                            child: Icon(
+                              Icons.menu_book,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(

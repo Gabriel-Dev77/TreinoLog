@@ -108,3 +108,38 @@ test('excluir treino inexistente retorna 404', async () => {
   const r = await chamar('DELETE', '/workouts/nao-existe');
   assert.equal(r.status, 404);
 });
+
+// ---------------------------------------------------------------------------
+// Etapa 6: vínculo com o catálogo externo wger
+
+test('salva e atualiza o wgerId do exercício', async () => {
+  const criado = await chamar('POST', '/workouts', {
+    exercicios: [
+      { nome: 'Supino reto', series: 4, repeticoes: 10, carga: 60, wgerId: 73 },
+      { nome: 'Exercício livre', series: 3, repeticoes: 12, carga: 20 },
+    ],
+  });
+  assert.equal(criado.status, 201);
+  assert.equal(criado.body.exercicios[0].wgerId, 73);
+  assert.equal(criado.body.exercicios[1].wgerId, null);
+
+  const exId = criado.body.exercicios[1].id;
+  const editado = await chamar('PUT', `/workouts/${criado.body.id}/exercises/${exId}`, {
+    nome: 'Rosca direta',
+    series: 3,
+    repeticoes: 12,
+    carga: 20,
+    wgerId: 91,
+  });
+  assert.equal(editado.status, 200);
+  assert.equal(editado.body.exercicios[1].nome, 'Rosca direta');
+  assert.equal(editado.body.exercicios[1].wgerId, 91);
+});
+
+test('rejeita wgerId inválido', async () => {
+  const r = await chamar('POST', '/workouts', {
+    exercicios: [{ nome: 'Supino', series: 4, repeticoes: 10, carga: 60, wgerId: 'abc' }],
+  });
+  assert.equal(r.status, 400);
+  assert.match(r.body.detalhes[0], /wgerId/);
+});

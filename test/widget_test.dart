@@ -68,5 +68,24 @@ void main() {
     expect(copia.data, original.data);
     expect(copia.exercicios.single.nome, 'Agachamento');
     expect(copia.exercicios.single.carga, 80.5);
+    expect(copia.exercicios.single.wgerId, isNull);
+  });
+
+  test('Exercise guarda e remove o vínculo com o catálogo (wgerId)', () {
+    final ex = Exercise(id: 'e1', nome: 'Supino', series: 4, repeticoes: 10, carga: 60, wgerId: 73);
+
+    expect(Exercise.fromJson(ex.toJson()).wgerId, 73);
+    expect(ex.copyWith(nome: 'Supino reto').wgerId, 73); // mantém
+    expect(ex.copyWith(removerWgerId: true).wgerId, isNull); // remove
+
+    // Cache salvo na Etapa 5 não tinha o campo wgerId.
+    final antigo = Exercise.fromJson({
+      'id': 'e2',
+      'nome': 'Rosca',
+      'series': 3,
+      'repeticoes': 12,
+      'carga': 10,
+    });
+    expect(antigo.wgerId, isNull);
   });
 }

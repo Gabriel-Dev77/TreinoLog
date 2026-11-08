@@ -4,6 +4,7 @@ import '../services/workout_store.dart';
 import '../widgets/responsive_container.dart';
 import '../services/feedback_service.dart';
 import '../widgets/offline_banner.dart';
+import 'exercise_catalog_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -144,6 +145,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Etapa 6: acesso ao catálogo externo de exercícios (wger).
+            Card(
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: const ExcludeSemantics(
+                  child: Icon(Icons.menu_book, size: 32, color: Colors.blue),
+                ),
+                title: const Text('Catálogo de exercícios'),
+                subtitle: const Text('Pesquise exercícios, músculos trabalhados e como executar'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ExerciseCatalogScreen()),
                 ),
               ),
             ),

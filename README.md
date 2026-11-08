@@ -12,12 +12,15 @@ A proposta completa do projeto (problema, público-alvo, funcionalidades, telas,
 
 A partir da Etapa 5, o projeto é dividido em **frontend mobile** (Flutter) e **backend** (API REST), que se comunicam por HTTP com JSON. Detalhes em [`docs/etapa-05.md`](docs/etapa-05.md).
 
+Na Etapa 6, o app passou a consultar também um **serviço externo**: o catálogo público de exercícios do [wger](https://wger.de). O usuário pode pesquisar exercícios, ver como executá-los e quais músculos trabalham, e vincular os exercícios dos seus treinos ao catálogo. Detalhes em [`docs/etapa-06.md`](docs/etapa-06.md).
+
 ## Tecnologias utilizadas
 
 - **Frontend mobile:** Flutter (Dart), pacote `http` para consumo da API
 - **Backend:** Node.js + Express (API REST)
 - **Banco de dados:** SQLite (módulo nativo `node:sqlite`), no servidor
 - **Cache local no app:** `shared_preferences` (permite consultar os treinos sem conexão)
+- **Serviço externo:** API REST pública do wger (`https://wger.de/api/v2`), catálogo de exercícios, sem necessidade de chave
 
 ## Estrutura do projeto
 
@@ -34,10 +37,10 @@ TreinoLog/
 │   └── package.json
 ├── lib/                      # App Flutter
 │   ├── main.dart
-│   ├── config/               # endereço da API
-│   ├── models/               # Workout, Exercise
+│   ├── config/               # endereços da API própria e do wger
+│   ├── models/               # Workout, Exercise, CatalogExercise, RequestState
 │   ├── screens/              # telas
-│   ├── services/             # ApiService, WorkoutStore, FeedbackService
+│   ├── services/             # ApiService, WgerService, WorkoutStore, FeedbackService
 │   ├── theme/
 │   ├── utils/                # validadores de formulário
 │   └── widgets/              # componentes reutilizáveis
@@ -66,6 +69,8 @@ flutter run
 
 O app se conecta a `http://localhost:3000` (Web/desktop) ou `http://10.0.2.2:3000` (emulador Android). Para celular físico, use `flutter run --dart-define=API_URL=http://IP-DO-SEU-PC:3000`.
 
+O catálogo de exercícios (wger) só precisa de acesso à internet: não há chave nem login para configurar.
+
 **Testes:** `npm test` (dentro de `backend/`) e `flutter test` (na raiz).
 
 ## Autor
@@ -80,3 +85,4 @@ O app se conecta a `http://localhost:3000` (Web/desktop) ou `http://10.0.2.2:300
 - Etapa 3: Navegação, UX e acessibilidade (ver [`docs/etapa-03.md`](docs/etapa-03.md))
 - Etapa 4: Persistência local de dados (ver [`docs/etapa-04.md`](docs/etapa-04.md))
 - Etapa 5: Primeira versão funcional com backend (ver [`docs/etapa-05.md`](docs/etapa-05.md))
+- Etapa 6: Integração com serviço externo, catálogo de exercícios wger (ver [`docs/etapa-06.md`](docs/etapa-06.md))

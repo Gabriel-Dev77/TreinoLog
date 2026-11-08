@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../models/catalog_exercise.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/api_service.dart';
@@ -9,6 +10,7 @@ import '../utils/validators.dart';
 import '../widgets/exercise_tile.dart';
 import '../widgets/offline_banner.dart';
 import '../widgets/responsive_container.dart';
+import 'exercise_catalog_screen.dart';
 
 class NewWorkoutScreen extends StatefulWidget {
   const NewWorkoutScreen({super.key});
@@ -27,6 +29,30 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
   final List<Exercise> _exercicios = [];
   bool _salvando = false;
 
+  /// Etapa 6: exercício do catálogo wger escolhido para o próximo exercício.
+  /// O vínculo continua mesmo se o usuário ajustar o nome (ex: traduzir).
+  CatalogExercise? _vinculo;
+
+  /// Abre o catálogo externo em modo seleção e preenche o nome.
+  Future<void> _escolherDoCatalogo() async {
+    final escolhido = await Navigator.push<CatalogExercise>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExerciseCatalogScreen(
+          modoSelecao: true,
+          termoInicial: _nomeController.text.trim(),
+        ),
+      ),
+    );
+    if (escolhido == null || !mounted) return;
+
+    setState(() {
+      _vinculo = escolhido;
+      _nomeController.text = escolhido.nome;
+    });
+    FeedbackService.info(context, '"${escolhido.nome}" selecionado do catálogo');
+  }
+
   void _adicionarExercicio() {
     // Valida todos os campos; os erros aparecem embaixo de cada um.
     if (!_formKey.currentState!.validate()) {
@@ -40,10 +66,12 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
       series: Validators.parseInteiro(_seriesController.text),
       repeticoes: Validators.parseInteiro(_repeticoesController.text),
       carga: Validators.parseCarga(_cargaController.text),
+      wgerId: _vinculo?.id,
     );
 
     setState(() {
       _exercicios.add(exercicio);
+      _vinculo = null;
       _nomeController.clear();
       _seriesController.clear();
       _repeticoesController.clear();
@@ -121,11 +149,27 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
                         maxLength: Validators.nomeMax,
                         textCapitalization: TextCapitalization.sentences,
                         validator: Validators.nome,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Nome do exercício',
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.manage_search),
+                            tooltip: 'Buscar no catálogo de exercícios',
+                            onPressed: _salvando ? null : _escolherDoCatalogo,
+                          ),
                         ),
                       ),
+                      if (_vinculo != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: InputChip(
+                            avatar: const Icon(Icons.menu_book, size: 18),
+                            label: Text('Catálogo: ${_vinculo!.nome}'),
+                            tooltip: 'Exercício vinculado ao catálogo wger',
+                            deleteButtonTooltipMessage: 'Remover vínculo com o catálogo',
+                            onDeleted: () => setState(() => _vinculo = null),
+                          ),
+                        ),
                       const SizedBox(height: 4),
 
                       LayoutBuilder(

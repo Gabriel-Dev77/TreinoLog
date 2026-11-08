@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../models/catalog_exercise.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/api_service.dart';
@@ -8,6 +9,8 @@ import '../services/workout_store.dart';
 import '../utils/validators.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/offline_banner.dart';
+import 'catalog_exercise_detail_screen.dart';
+import 'exercise_catalog_screen.dart';
 
 class WorkoutDetailsScreen extends StatefulWidget {
   final String workoutId;
@@ -46,6 +49,15 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
     } finally {
       if (mounted) setState(() => _salvando = false);
     }
+  }
+
+  void _verNoCatalogo(int wgerId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CatalogExerciseDetailScreen(exerciseId: wgerId),
+      ),
+    );
   }
 
   /// EXCLUIR: apaga o treino inteiro e volta para o Histórico.
@@ -123,18 +135,34 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
                             return Card(
                               margin: const EdgeInsets.symmetric(vertical: 4),
                               child: ListTile(
-                                leading: const Icon(Icons.fitness_center),
+                                leading: Icon(
+                                  exercicio.wgerId != null
+                                      ? Icons.menu_book
+                                      : Icons.fitness_center,
+                                ),
                                 title: Text(exercicio.nome),
                                 subtitle: Text(
                                   '${exercicio.series} séries x ${exercicio.repeticoes} repetições — '
                                   '${exercicio.carga.toStringAsFixed(1)} kg',
                                 ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.edit_outlined),
-                                  tooltip: 'Editar exercício',
-                                  onPressed: _salvando
-                                      ? null
-                                      : () => _editarExercicio(workout, exercicio),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Etapa 6: consulta o exercício no catálogo wger.
+                                    if (exercicio.wgerId != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.info_outline),
+                                        tooltip: 'Ver ${exercicio.nome} no catálogo',
+                                        onPressed: () => _verNoCatalogo(exercicio.wgerId!),
+                                      ),
+                                    IconButton(
+                                      icon: const Icon(Icons.edit_outlined),
+                                      tooltip: 'Editar exercício',
+                                      onPressed: _salvando
+                                          ? null
+                                          : () => _editarExercicio(workout, exercicio),
+                                    ),
+                                  ],
                                 ),
                                 onTap: _salvando
                                     ? null
@@ -174,10 +202,15 @@ class _EditarExercicioDialogState extends State<_EditarExercicioDialog> {
   late final TextEditingController _repeticoes;
   late final TextEditingController _carga;
 
+  /// Etapa 6: id no catálogo wger (null = sem vínculo) e nome para exibir no chip.
+  int? _wgerId;
+  String? _nomeCatalogo;
+
   @override
   void initState() {
     super.initState();
     final e = widget.exercicio;
+    _wgerId = e.wgerId;
     _nome = TextEditingController(text: e.nome);
     _series = TextEditingController(text: e.series.toString());
     _repeticoes = TextEditingController(text: e.repeticoes.toString());
@@ -203,8 +236,26 @@ class _EditarExercicioDialogState extends State<_EditarExercicioDialog> {
         series: Validators.parseInteiro(_series.text),
         repeticoes: Validators.parseInteiro(_repeticoes.text),
         carga: Validators.parseCarga(_carga.text),
+        wgerId: _wgerId,
+        removerWgerId: _wgerId == null,
       ),
     );
+  }
+
+  /// ATUALIZAÇÃO com dados externos: troca o exercício por um do catálogo.
+  Future<void> _escolherDoCatalogo() async {
+    final escolhido = await Navigator.push<CatalogExercise>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExerciseCatalogScreen(modoSelecao: true, termoInicial: _nome.text.trim()),
+      ),
+    );
+    if (escolhido == null || !mounted) return;
+    setState(() {
+      _wgerId = escolhido.id;
+      _nomeCatalogo = escolhido.nome;
+      _nome.text = escolhido.nome;
+    });
   }
 
   @override
@@ -222,8 +273,32 @@ class _EditarExercicioDialogState extends State<_EditarExercicioDialog> {
                 controller: _nome,
                 maxLength: Validators.nomeMax,
                 validator: Validators.nome,
-                decoration: const InputDecoration(labelText: 'Nome'),
+                decoration: InputDecoration(
+                  labelText: 'Nome',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.manage_search),
+                    tooltip: 'Escolher do catálogo de exercícios',
+                    onPressed: _escolherDoCatalogo,
+                  ),
+                ),
               ),
+              if (_wgerId != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: InputChip(
+                    avatar: const Icon(Icons.menu_book, size: 18),
+                    label: Text(
+                      _nomeCatalogo != null
+                          ? 'Catálogo: $_nomeCatalogo'
+                          : 'Vinculado ao catálogo',
+                    ),
+                    deleteButtonTooltipMessage: 'Remover vínculo com o catálogo',
+                    onDeleted: () => setState(() {
+                      _wgerId = null;
+                      _nomeCatalogo = null;
+                    }),
+                  ),
+                ),
               TextFormField(
                 controller: _series,
                 keyboardType: TextInputType.number,

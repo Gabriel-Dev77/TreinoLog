@@ -40,9 +40,15 @@ export function validarExercicio(entrada, prefixo = '') {
     erros.push(`${prefixo}carga deve ser um número entre ${LIMITES.cargaMin} e ${LIMITES.cargaMax} kg`);
   }
 
+  // Etapa 6: id do exercício no catálogo wger (opcional).
+  const wgerId = e.wgerId ?? null;
+  if (wgerId !== null && (!Number.isInteger(wgerId) || wgerId <= 0)) {
+    erros.push(`${prefixo}wgerId deve ser um número inteiro positivo ou null`);
+  }
+
   return {
     erros,
-    valor: { nome, series: e.series, repeticoes: e.repeticoes, carga: e.carga },
+    valor: { nome, series: e.series, repeticoes: e.repeticoes, carga: e.carga, wgerId },
   };
 }
 

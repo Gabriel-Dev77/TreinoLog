@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 function montarTreino(db, linha) {
   const exercicios = db
     .prepare(
-      `SELECT id, nome, series, repeticoes, carga
+      `SELECT id, nome, series, repeticoes, carga, wger_id AS wgerId
          FROM exercises
         WHERE workout_id = ?
         ORDER BY ordem`,
@@ -31,8 +31,8 @@ export function criarTreino(db, { data, exercicios }) {
   const id = randomUUID();
   const inserirTreino = db.prepare('INSERT INTO workouts (id, data) VALUES (?, ?)');
   const inserirExercicio = db.prepare(
-    `INSERT INTO exercises (id, workout_id, ordem, nome, series, repeticoes, carga)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO exercises (id, workout_id, ordem, nome, series, repeticoes, carga, wger_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   );
 
   // Transação: ou salva o treino com todos os exercícios, ou não salva nada.
@@ -40,7 +40,7 @@ export function criarTreino(db, { data, exercicios }) {
   try {
     inserirTreino.run(id, data);
     exercicios.forEach((e, i) => {
-      inserirExercicio.run(randomUUID(), id, i, e.nome, e.series, e.repeticoes, e.carga);
+      inserirExercicio.run(randomUUID(), id, i, e.nome, e.series, e.repeticoes, e.carga, e.wgerId);
     });
     db.exec('COMMIT');
   } catch (erro) {
@@ -55,14 +55,14 @@ export function criarTreino(db, { data, exercicios }) {
  * Atualiza um exercício de um treino.
  * Retorna o treino atualizado, ou null se o treino/exercício não existir.
  */
-export function atualizarExercicio(db, workoutId, exerciseId, { nome, series, repeticoes, carga }) {
+export function atualizarExercicio(db, workoutId, exerciseId, { nome, series, repeticoes, carga, wgerId }) {
   const resultado = db
     .prepare(
       `UPDATE exercises
-          SET nome = ?, series = ?, repeticoes = ?, carga = ?
+          SET nome = ?, series = ?, repeticoes = ?, carga = ?, wger_id = ?
         WHERE id = ? AND workout_id = ?`,
     )
-    .run(nome, series, repeticoes, carga, exerciseId, workoutId);
+    .run(nome, series, repeticoes, carga, wgerId, exerciseId, workoutId);
 
   if (resultado.changes === 0) return null;
   return buscarTreino(db, workoutId);
