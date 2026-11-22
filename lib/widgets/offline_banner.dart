@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../services/api_service.dart';
 import '../services/feedback_service.dart';
-import '../services/workout_store.dart';
+import '../providers/workout_provider.dart';
 
 /// Faixa exibida no topo das telas quando o servidor não responde.
 /// Some sozinha assim que a conexão volta.
@@ -19,7 +20,7 @@ class _OfflineBannerState extends State<OfflineBanner> {
   Future<void> _tentarNovamente() async {
     setState(() => _tentando = true);
     try {
-      await WorkoutStore.refresh();
+      await context.read<WorkoutProvider>().refresh();
       if (mounted) FeedbackService.success(context, 'Conexão com o servidor restabelecida');
     } on ApiException catch (e) {
       if (mounted) FeedbackService.error(context, e.mensagem);
@@ -30,9 +31,10 @@ class _OfflineBannerState extends State<OfflineBanner> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: WorkoutStore.offline,
-      builder: (context, offline, _) {
+    // Etapa 7: lê o indicador "offline" do estado global de treinos.
+    return Builder(
+      builder: (context) {
+        final offline = context.watch<WorkoutProvider>().offline;
         if (!offline) return const SizedBox.shrink();
 
         return Semantics(

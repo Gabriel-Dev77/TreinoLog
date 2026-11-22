@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/workout.dart';
 import '../services/api_service.dart';
 import '../services/feedback_service.dart';
-import '../services/workout_store.dart';
+import '../providers/workout_provider.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/exercise_tile.dart';
 import '../widgets/offline_banner.dart';
@@ -29,7 +30,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   /// Busca os treinos no servidor ao abrir a tela.
   Future<void> _carregar() async {
     try {
-      await WorkoutStore.refresh();
+      await context.read<WorkoutProvider>().refresh();
       _erro = null;
     } on ApiException catch (e) {
       _erro = e.mensagem;
@@ -41,7 +42,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   /// "Puxar para atualizar".
   Future<void> _atualizar() async {
     try {
-      await WorkoutStore.refresh();
+      await context.read<WorkoutProvider>().refresh();
       if (mounted) setState(() => _erro = null);
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -52,9 +53,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<void> _confirmarExclusao(Workout workout) async {
     if (!await confirmarExclusaoDeTreino(context)) return;
+    if (!mounted) return;
 
     try {
-      await WorkoutStore.removeWorkout(workout);
+      await context.read<WorkoutProvider>().removeWorkout(workout);
       if (mounted) FeedbackService.success(context, 'Treino excluído');
     } on ApiException catch (e) {
       if (mounted) FeedbackService.error(context, e.mensagem);
@@ -113,9 +115,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
         '${data.minute.toString().padLeft(2, '0')}';
   }
 
-  Widget _buildConteudo() {
+  Widget _buildConteudo(List<Workout> todos) {
     // Mais recentes primeiro.
-    final workouts = WorkoutStore.workouts.reversed.toList();
+    final workouts = todos.reversed.toList();
 
     if (_carregando && workouts.isEmpty) return _buildSkeleton();
 
@@ -197,11 +199,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _atualizar,
-              // Redesenha sempre que a lista de treinos mudar
-              // (novo treino salvo, edição, exclusão).
-              child: ValueListenableBuilder<int>(
-                valueListenable: WorkoutStore.changes,
-                builder: (context, _, _) => _buildConteudo(),
+              // Etapa 7: watch redesenha a lista sempre que o estado global
+              // de treinos mudar (novo treino salvo, edição, exclusão).
+              child: Builder(
+                builder: (context) =>
+                    _buildConteudo(context.watch<WorkoutProvider>().workouts),
               ),
             ),
           ),

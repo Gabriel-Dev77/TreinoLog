@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/workout_store.dart';
+import 'package:provider/provider.dart';
+import '../providers/workout_provider.dart';
 import '../widgets/responsive_container.dart';
 
 class ProgressScreen extends StatelessWidget {
@@ -7,16 +8,9 @@ class ProgressScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Redesenha o gráfico sempre que os treinos mudarem (inclusive
-    // quando chegam dados novos do servidor).
-    return ValueListenableBuilder<int>(
-      valueListenable: WorkoutStore.changes,
-      builder: (context, _, _) => _buildConteudo(context),
-    );
-  }
-
-  Widget _buildConteudo(BuildContext context) {
-    final workouts = WorkoutStore.workouts;
+    // Etapa 7: watch redesenha o gráfico sempre que o estado global de
+    // treinos mudar (inclusive quando chegam dados novos do servidor).
+    final workouts = context.watch<WorkoutProvider>().workouts;
 
     // Agrupa as cargas registradas por nome de exercício, em ordem cronológica
     final Map<String, List<double>> cargasPorExercicio = {};

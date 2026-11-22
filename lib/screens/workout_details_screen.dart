@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import '../models/catalog_exercise.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/api_service.dart';
 import '../services/feedback_service.dart';
-import '../services/workout_store.dart';
+import '../services/share_service.dart';
+import '../providers/workout_provider.dart';
 import '../utils/validators.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/offline_banner.dart';
@@ -42,12 +44,34 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
 
     setState(() => _salvando = true);
     try {
-      await WorkoutStore.updateExercise(workout.id, editado);
+      await context.read<WorkoutProvider>().updateExercise(workout.id, editado);
       if (mounted) FeedbackService.success(context, 'Exercício atualizado');
     } on ApiException catch (e) {
       if (mounted) FeedbackService.error(context, e.mensagem);
     } finally {
       if (mounted) setState(() => _salvando = false);
+    }
+  }
+
+  /// COMPARTILHAR: abre a janela de compartilhamento do sistema
+  /// (WhatsApp, e-mail, Telegram...) com o resumo do treino.
+  Future<void> _compartilhar(Workout workout) async {
+    final resultado = await ShareService.compartilharTreino(workout);
+    if (!mounted) return;
+    switch (resultado) {
+      case ResultadoCompartilhamento.compartilhado:
+        FeedbackService.success(context, 'Treino compartilhado!');
+      case ResultadoCompartilhamento.cancelado:
+        FeedbackService.info(context, 'Compartilhamento cancelado');
+      case ResultadoCompartilhamento.enviado:
+        break; // o sistema não informa o resultado; nada a dizer
+      case ResultadoCompartilhamento.copiadoParaAreaDeTransferencia:
+        FeedbackService.info(
+          context,
+          'Não foi possível abrir o compartilhamento. O resumo foi copiado: cole onde quiser.',
+        );
+      case ResultadoCompartilhamento.falhou:
+        FeedbackService.error(context, 'Não foi possível compartilhar o treino neste dispositivo.');
     }
   }
 
@@ -67,7 +91,7 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
 
     setState(() => _salvando = true);
     try {
-      await WorkoutStore.removeWorkout(workout);
+      await context.read<WorkoutProvider>().removeWorkout(workout);
       if (!mounted) return;
       FeedbackService.success(context, 'Treino excluído');
       Navigator.pop(context);
@@ -80,10 +104,10 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: WorkoutStore.changes,
-      builder: (context, _, _) {
-        final workout = WorkoutStore.findById(widget.workoutId);
+    // Etapa 7: watch redesenha a tela quando o estado global de treinos muda.
+    return Builder(
+      builder: (context) {
+        final workout = context.watch<WorkoutProvider>().findById(widget.workoutId);
 
         // O treino pode ter sido apagado (ex: lista atualizada do servidor).
         if (workout == null) {
@@ -97,6 +121,12 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
           appBar: AppBar(
             title: const Text('Detalhes do Treino'),
             actions: [
+              // Etapa 7: recurso nativo de compartilhamento.
+              IconButton(
+                icon: const Icon(Icons.share),
+                tooltip: 'Compartilhar treino',
+                onPressed: _salvando ? null : () => _compartilhar(workout),
+              ),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
                 tooltip: 'Excluir treino',

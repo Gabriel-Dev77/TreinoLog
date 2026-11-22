@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import '../models/catalog_exercise.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/api_service.dart';
 import '../services/feedback_service.dart';
-import '../services/workout_store.dart';
+import '../providers/workout_provider.dart';
 import '../utils/validators.dart';
 import '../widgets/exercise_tile.dart';
 import '../widgets/offline_banner.dart';
@@ -61,7 +62,7 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
     }
 
     final exercicio = Exercise(
-      id: WorkoutStore.generateId(), // id temporário; o servidor gera o definitivo
+      id: WorkoutProvider.generateId(), // id temporário; o servidor gera o definitivo
       nome: _nomeController.text.trim(),
       series: Validators.parseInteiro(_seriesController.text),
       repeticoes: Validators.parseInteiro(_repeticoesController.text),
@@ -95,13 +96,13 @@ class _NewWorkoutScreenState extends State<NewWorkoutScreen> {
     setState(() => _salvando = true);
 
     final treino = Workout(
-      id: WorkoutStore.generateId(),
+      id: WorkoutProvider.generateId(),
       data: DateTime.now(),
       exercicios: List.from(_exercicios),
     );
 
     try {
-      await WorkoutStore.addWorkout(treino);
+      await context.read<WorkoutProvider>().addWorkout(treino);
       if (!mounted) return;
       setState(() => _exercicios.clear());
       FeedbackService.success(context, 'Treino salvo com sucesso! Veja no Histórico.');

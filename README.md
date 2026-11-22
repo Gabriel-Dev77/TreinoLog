@@ -14,9 +14,13 @@ A partir da Etapa 5, o projeto é dividido em **frontend mobile** (Flutter) e **
 
 Na Etapa 6, o app passou a consultar também um **serviço externo**: o catálogo público de exercícios do [wger](https://wger.de). O usuário pode pesquisar exercícios, ver como executá-los e quais músculos trabalham, e vincular os exercícios dos seus treinos ao catálogo. Detalhes em [`docs/etapa-06.md`](docs/etapa-06.md).
 
+Na Etapa 7, o app passou a usar **estado global com Provider**: treinos, configurações do usuário e hidratação são compartilhados entre as telas. Também passou a usar **recursos nativos do celular**: notificações com lembretes de beber água, que chegam mesmo com o app fechado, e o compartilhamento do resumo de um treino. Detalhes em [`docs/etapa-07.md`](docs/etapa-07.md).
+
 ## Tecnologias utilizadas
 
 - **Frontend mobile:** Flutter (Dart), pacote `http` para consumo da API
+- **Estado global:** `provider` (ChangeNotifier)
+- **Recursos nativos:** `flutter_local_notifications` (lembretes de hidratação) e `share_plus` (compartilhar treino)
 - **Backend:** Node.js + Express (API REST)
 - **Banco de dados:** SQLite (módulo nativo `node:sqlite`), no servidor
 - **Cache local no app:** `shared_preferences` (permite consultar os treinos sem conexão)
@@ -39,10 +43,11 @@ TreinoLog/
 │   ├── main.dart
 │   ├── config/               # endereços da API própria e do wger
 │   ├── models/               # Workout, Exercise, CatalogExercise, RequestState
+│   ├── providers/            # estado global: treinos, configurações, hidratação
 │   ├── screens/              # telas
-│   ├── services/             # ApiService, WgerService, WorkoutStore, FeedbackService
+│   ├── services/             # ApiService, WgerService, notificações, compartilhamento, FeedbackService
 │   ├── theme/
-│   ├── utils/                # validadores de formulário
+│   ├── utils/                # validadores de formulário e cálculo dos lembretes
 │   └── widgets/              # componentes reutilizáveis
 ├── test/                     # testes do app
 ├── docs/                     # documentação de cada etapa
@@ -71,6 +76,8 @@ O app se conecta a `http://localhost:3000` (Web/desktop) ou `http://10.0.2.2:300
 
 O catálogo de exercícios (wger) só precisa de acesso à internet: não há chave nem login para configurar.
 
+Os lembretes de hidratação usam as notificações do Android: rode o app num celular ou emulador Android e ligue-os na aba **Perfil**. No navegador, o recurso aparece como indisponível e o restante do app funciona normalmente.
+
 **Testes:** `npm test` (dentro de `backend/`) e `flutter test` (na raiz).
 
 ## Autor
@@ -86,3 +93,4 @@ O catálogo de exercícios (wger) só precisa de acesso à internet: não há ch
 - Etapa 4: Persistência local de dados (ver [`docs/etapa-04.md`](docs/etapa-04.md))
 - Etapa 5: Primeira versão funcional com backend (ver [`docs/etapa-05.md`](docs/etapa-05.md))
 - Etapa 6: Integração com serviço externo, catálogo de exercícios wger (ver [`docs/etapa-06.md`](docs/etapa-06.md))
+- Etapa 7: Estado global (Provider) e recursos nativos: notificações e compartilhamento (ver [`docs/etapa-07.md`](docs/etapa-07.md))

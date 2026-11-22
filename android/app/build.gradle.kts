@@ -6,10 +6,14 @@ plugins {
 
 android {
     namespace = "com.example.aprenda_brincando"
-    compileSdk = flutter.compileSdkVersion
+    // Etapa 7: o plugin flutter_local_notifications exige compileSdk 37 ou maior.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // Etapa 7: "desugaring", exigido pelo flutter_local_notifications para
+        // agendar notificações também em versões antigas do Android.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -27,6 +31,7 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -46,4 +51,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Etapa 7: biblioteca usada pelo desugaring (ver compileOptions).
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

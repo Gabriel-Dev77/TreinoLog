@@ -1,23 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'providers/hydration_provider.dart';
+import 'providers/settings_provider.dart';
+import 'providers/workout_provider.dart';
+import 'screens/history_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_workout_screen.dart';
-import 'screens/history_screen.dart';
-import 'screens/progress_screen.dart';
 import 'screens/profile_screen.dart';
-import 'services/workout_store.dart';
+import 'screens/progress_screen.dart';
+import 'services/reminder_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
-  // Necessário antes de usar qualquer plugin nativo (como SharedPreferences)
-  // fora do runApp.
+  // Necessário antes de usar plugins nativos (SharedPreferences,
+  // notificações) fora do runApp.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Carrega o cache local ANTES do app abrir (a primeira tela já mostra
-  // os treinos conhecidos) e dispara, em segundo plano, a sincronização
-  // com o backend. Se o servidor estiver fora do ar, o app abre mesmo assim.
-  await WorkoutStore.init();
+  // Etapa 7: os estados globais são criados uma única vez aqui e
+  // carregados ANTES do app abrir, para a primeira tela já mostrar os dados.
+  final settings = SettingsProvider();
+  await settings.carregar();
 
-  runApp(const TreinoLogApp());
+  final hydration = HydrationProvider(settings, NotificationReminderService());
+  await hydration.carregar();
+
+  final workouts = WorkoutProvider();
+  await workouts.init(); // cache local + sincronização em segundo plano
+
+  runApp(
+    // MultiProvider coloca os estados no topo da árvore de widgets:
+    // qualquer tela abaixo dele consegue ler e reagir a mudanças.
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: settings),
+        ChangeNotifierProvider.value(value: hydration),
+        ChangeNotifierProvider.value(value: workouts),
+      ],
+      child: const TreinoLogApp(),
+    ),
+  );
 }
 
 class TreinoLogApp extends StatelessWidget {
@@ -42,14 +64,31 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
+  late final AppLifecycleListener _ciclodeVida;
 
   static const _abas = [
     ('Início', Icons.home, 'Resumo do dia e hidratação'),
     ('Novo Treino', Icons.add_circle_outline, 'Registrar um novo treino'),
     ('Histórico', Icons.history, 'Ver treinos já registrados'),
     ('Progresso', Icons.show_chart, 'Ver evolução de carga por exercício'),
-    ('Perfil', Icons.person, 'Ver informações do perfil'),
+    ('Perfil', Icons.person, 'Perfil, meta de água e lembretes'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Quando o app volta para a tela: zera a água se o dia mudou e confere
+    // se a permissão de notificações foi alterada nas configurações do Android.
+    _ciclodeVida = AppLifecycleListener(
+      onResume: () => context.read<HydrationProvider>().aoVoltarParaApp(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ciclodeVida.dispose();
+    super.dispose();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -59,12 +98,12 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> screens = [
-      const HomeScreen(),
-      const NewWorkoutScreen(),
+    const List<Widget> screens = [
+      HomeScreen(),
+      NewWorkoutScreen(),
       HistoryScreen(),
       ProgressScreen(),
-      const ProfileScreen(),
+      ProfileScreen(),
     ];
 
     return Scaffold(
